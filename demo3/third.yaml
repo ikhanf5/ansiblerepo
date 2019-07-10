@@ -1,0 +1,23 @@
+---
+
+- name: Create a VIP, pool and pool members
+  hosts: all
+  connection: local
+
+  vars_files:
+    - netvar.yaml
+
+  tasks:
+
+    - name: Import and activate ASM policy
+      tags:
+        - asmpolicy
+      bigip_asm_policy:
+        provider: "{{ provider }}"
+        name: OWA_asm_policy
+        file: owa_asmtemplate.xml
+        active: yes
+        state: present
+      delegate_to: localhost
+
+
