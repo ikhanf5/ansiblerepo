@@ -1,0 +1,136 @@
+---
+
+- name: Create a VIP, pool and pool members
+  hosts: all
+  connection: local
+
+  vars_files:
+    - netvar.yaml
+
+  tasks:
+
+    - name: Add VLAN tagged interface on Primary LTM
+      tags:
+        - vlan
+      bigip_vlan:
+        tagged_interface: "{{ pri_int }}"
+        name: "{{ pri_vname }}"
+        tag: "{{ pri_vtag }}"
+        provider: "{{ ltm01 }}"
+      delegate_to: localhost
+
+
+    - name: Add VLAN tagged interface on Secondary LTM
+      tags:
+        - vlan
+      bigip_vlan:
+        tagged_interface: "{{ sec_int }}"
+        name: "{{ sec_vname }}"
+        tag: "{{ sec_vtag }}"
+        provider: "{{ ltm02 }}"
+      delegate_to: localhost
+
+    - name: Set VLANs on the route domain Primary LTM
+      tags:
+        - domain   
+      bigip_routedomain:
+        name: "{{pri_rdname}}"
+        state: "{{objectstate}}"
+        id: "{{ pri_vtag }}"
+        parent: "{{pri_parent}}"
+        vlans:
+          - "{{ pri_vname }}"
+        provider: "{{ ltm01 }}"
+      delegate_to: localhost
+
+
+    - name: Set VLANs on the route domain Secondary LTM
+      tags:
+        - domain   
+      bigip_routedomain:
+        name: "{{sec_rdname}}"
+        state: "{{objectstate}}"
+        id: "{{ sec_vtag }}"
+        parent: "{{sec_parent}}"
+        vlans:
+          - "{{ sec_vname }}"
+        provider: "{{ ltm02 }}"
+      delegate_to: localhost
+
+
+    - name: Create Self IP on Primary LTM
+      tags:
+        - self      
+      bigip_selfip:
+        name: "{{pri_selfname}}"
+        address: "{{pri_selfip}}"
+        netmask: "{{pri_mask}}"
+        vlan: "{{pri_vname}}"
+        route_domain: "{{ pri_vtag }}"
+        allow_service: default
+        provider: "{{ ltm01 }}"        
+      delegate_to: localhost
+
+    - name: Create Self IP on Primary LTM
+      tags:
+        - self      
+      bigip_selfip:
+        name: "{{sec_selfname}}"
+        address: "{{sec_selfip}}"
+        netmask: "{{sec_mask}}"
+        vlan: "{{sec_vname}}"
+        route_domain: "{{ sec_vtag }}"
+        allow_service: default
+        provider: "{{ ltm02 }}"        
+      delegate_to: localhost
+
+    - name: Create Floating IP on LTM
+      tags:
+        - self      
+      bigip_selfip:
+        name: "{{pri_floatname}}"
+        address: "{{pri_floatip}}"
+        netmask: "{{pri_mask}}"
+        vlan: "{{pri_vname}}"
+        route_domain: "{{ pri_vtag }}"
+        allow_service: default
+        traffic_group: traffic-group-1
+        provider: "{{ ltm02 }}"        
+      delegate_to: localhost
+
+
+    - name: Create a pool
+      tags:
+        - pool 
+      bigip_pool:
+        lb_method: "{{pri_lbmethod}}"
+        name: "{{pri_poolname}}"
+        monitors:
+          - "{{pri_monitor}}"
+        provider: "{{ ltm01 }}"
+      delegate_to: localhost
+      
+
+    - name: Add members to pool
+      tags:
+        - members
+      bigip_pool_member:
+        description: "{{item.value.desc}}"
+        host: "{{item.value.ip}}"
+        name: "{{item.key}}"
+        pool: "{{item.value.poolname}}"
+        port: "{{item.value.port}}"
+        provider: "{{ ltm01 }}"
+      with_dict: "{{nodes}}"
+      delegate_to: localhost
+
+
+    - name: Add Pool to HA group
+      tags:
+        - hagroup
+      bigip_command:
+        commands: modify /sys ha-group {{ha_group}} pools add { {{pri_poolname}} {minimum-threshold 1 weight 10 }}
+        provider: "{{ ltm01 }}"
+      delegate_to: localhost
+
+

@@ -1,0 +1,105 @@
+###############################
+#Define variable for LTM Login#
+###############################
+
+ltm01:
+  password: admin786
+  server: 192.168.0.120
+  user: admin
+  validate_certs: no
+  server_port: 443
+
+
+ltm02:
+  password: admin786
+  server: 192.168.0.121
+  user: admin
+  validate_certs: no
+  server_port: 443
+
+objectstate: present
+ha_group: LB-HECxx_0102_HA
+
+
+#################################
+#Define variable for Primary LTM#
+#################################
+
+
+pri_int: 1.1
+pri_vname: cust2
+pri_vtag: 102
+pri_rdname: cust2
+pri_parent: 0
+pri_selfname: cust2_self
+pri_selfip: 10.1.30.214
+pri_mask: 255.255.255.0
+pri_floatname: cust2_float
+pri_floatip: 10.1.30.213
+pri_lbmethod: round-robin
+pri_poolname: cust2_pool
+pri_monitor: gateway_icmp
+
+
+###################################
+#Define variable for Secondary LTM#
+###################################
+
+
+sec_int: 1.1
+sec_vname: cust2
+sec_vtag: 102
+sec_rdname: cust2
+sec_parent: 0
+sec_selfname: cust2_self
+sec_selfip: 10.1.30.215
+sec_mask: 255.255.255.0
+sec_floatname: cust2_float
+sec_floatip: 10.1.30.213
+sec_lbmethod: round-robin
+sec_poolname: cust2_pool
+sec_monitor: gateway_icmp
+
+
+#########################
+#Define nodes Dictionary#
+#########################
+
+nodes:
+  node01:
+    ip: 10.1.4.4%102
+    port: 0
+    desc: Customer Node 01
+    poolname: cust2_pool
+  node02:
+    ip: 10.1.4.5%102
+    port: 0
+    desc: Customer Node 02
+    poolname: cust2_pool
+
+
+
+##################################
+#Define Virtual Server Dictionary#
+##################################
+
+virtuals:
+  web_vs:
+    desc: Webserver Virtual
+    destip: 10.1.10.105
+    port: 80
+    snat: Automap
+    profile1: http
+    profile2: clientssl
+    poolname: webpool
+  owa_vs:
+    desc: Outlook Web Access Virtual
+    destip: 10.1.10.106
+    port: 80
+    snat: Automap
+    profile1: http
+    profile2: clientssl
+    poolname: owa
+
+
+
