@@ -12,7 +12,7 @@
       tags:
         - pool 
       bigip_pool:
-        provider: "{{ provider }}"
+        provider: "{{ ltm01 }}"
         lb_method: "{{ item.value.lbs_method }}"
         name: "{{ item.key }}"
         slow_ramp_time: "{{ item.value.ramp_time }}"
@@ -24,7 +24,7 @@
       tags:
         - members
       bigip_pool_member:
-        provider: "{{ provider }}"
+        provider: "{{ ltm01 }}"
         description: "{{ item.value.desc }}"
         host: "{{ item.value.ip }}"
         name: "{{ item.key }}"
@@ -38,7 +38,7 @@
       tags: 
         - virtual
       bigip_virtual_server:
-        provider: "{{ provider }}"
+        provider: "{{ ltm01 }}"
         description: web-vip
         destination: "{{ item.value.destip }}"
         name: "{{ item.key }}"

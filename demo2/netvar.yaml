@@ -1,4 +1,4 @@
-provider:
+ltm01:
   password: admin
   server: 10.1.1.245
   user: admin
@@ -20,6 +20,7 @@ pools:
   owa:
     ramp_time: 120
     lbs_method: round-robin
+
 
 #########################
 #Define nodes Dictionary#

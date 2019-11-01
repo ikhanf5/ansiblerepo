@@ -1,6 +1,6 @@
 ---
 
-- name: Create a VIP, pool and pool members
+- name: Import and Create new ASM Policy
   hosts: all
   connection: local
 
@@ -13,7 +13,7 @@
       tags:
         - asmpolicy
       bigip_asm_policy:
-        provider: "{{ provider }}"
+        provider: "{{ ltm01 }}"
         name: OWA_asm_policy
         file: owa_asmtemplate.xml
         active: yes
